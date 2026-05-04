@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GROK PROMPT STUDIO</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: #d8d2c8;
+    --border2: #c5bdb0;
+    --accent: #b5832a;
+    --accent-light: #f5ecd8;
+    --accent2: #5a4080;
+    --accent2-light: #ede8f5;
+    --text: #1a1714;
+    --text2: #4a4540;
+    --muted: #8a8078;
+    --danger: #c0392b;
+    --danger-light: #fdf0ee;
+    --success: #27ae60;
+    --sans: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Playfair Display', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .logo {
+    font-family: var(--display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .logo span {
+    color: var(--muted);
+    font-size: 10px;
+    font-family: var(--mono);
+    display: block;
+    letter-spacing: 3px;
+    margin-top: 3px;
+    font-weight: 400;
+  }
+
+  .header-badge {
+    margin-left: auto;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 4px 12px;
+    font-family: var(--mono);
+    background: var(--danger-light);
+  }
+
+  .main {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    min-height: calc(100vh - 65px);
+  }
+
+  .left-panel {
+    border-right: 1px solid var(--border);
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    background: var(--surface);
+    overflow-y: auto;
+  }
+
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-family: var(--mono);
+    font-weight: 500;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .char-block {
+    background: var(--accent2-light);
+    border: 1px solid #c8b8e8;
+    border-left: 3px solid var(--accent2);
+    padding: 14px;
+  }
+
+  .char-block h3 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .field-row.full { grid-template-columns: 1fr; }
+
+  label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    font-family: var(--mono);
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(181,131,42,0.12);
+  }
+
+  textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
+
+  .camera-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+  }
+
+  .cam-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 8px 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    line-height: 1.3;
+  }
+
+  .cam-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .cam-btn.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 500; }
+
+  .scene-controls { display: flex; flex-direction: column; gap: 8px; }
+
+  .gen-btn {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-family: var(--display);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(181,131,42,0.3);
+  }
+
+  .gen-btn:hover { background: #a07025; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(181,131,42,0.4); }
+  .gen-btn:active { transform: scale(0.99); }
+  .gen-btn:disabled { background: var(--muted); cursor: not-allowed; box-shadow: none; transform: none; }
+
+  .right-panel {
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background: var(--bg);
+  }
+
+  .antipattern-panel {
+    background: var(--danger-light);
+    border: 1px solid #e8b8b0;
+    border-left: 3px solid var(--danger);
+    padding: 14px 16px;
+  }
+
+  .antipattern-panel h3 {
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--danger);
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+
+  .rule-list { display: flex; flex-direction: column; gap: 5px; }
+
+  .rule-item {
+    font-size: 11px;
+    color: #7a3530;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+  }
+
+  .rule-item::before { content: '✗'; color: var(--danger); flex-shrink: 0; font-size: 10px; margin-top: 1px; font-weight: 700; }
+
+  .char-anchor {
+    background: var(--accent2-light);
+    border: 1px solid #c8b8e8;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--accent2);
+    line-height: 1.5;
+    display: none;
+  }
+
+  .char-anchor.visible { display: block; }
+  .char-anchor strong { color: #3a2060; font-weight: 600; }
+
+  .ua-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .loading {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-family: var(--mono);
+  }
+
+  .loading.visible { display: flex; }
+
+  .loading-bar {
+    width: 140px;
+    height: 3px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+
+  .loading-bar::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -50%;
+    width: 50%;
+    height: 100%;
+    background: var(--accent);
+    animation: slide 1s infinite;
+    border-radius: 2px;
+  }
+
+  @keyframes slide { to { left: 150%; } }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-align: center;
+    padding: 60px 0;
+    font-family: var(--mono);
+  }
+
+  .empty-icon { font-size: 40px; opacity: 0.25; }
+
+  .prompt-variants { display: flex; flex-direction: column; gap: 16px; }
+
+  .prompt-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .prompt-card.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .prompt-card-header {
+    padding: 10px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .variant-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-weight: 500;
+  }
+
+  .copy-btn {
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--success); color: var(--success); background: #edfaf3; }
+
+  .prompt-text {
+    padding: 16px;
+    font-family: var(--sans);
+    font-size: 13.5px;
+    line-height: 1.85;
+    color: var(--text);
+    white-space: pre-wrap;
+    min-height: 80px;
+  }
+
+  .ua-block {
+    background: var(--accent2-light);
+    border-top: 1px solid #d8ccf0;
+    padding: 12px 16px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #4a3870;
+  }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    Grok Prompt Studio
+    <span>CINEMATOGRAPHIC GENERATOR v1.0</span>
+  </div>
+  <div class="header-badge">ANTI-PATTERN PROTECTED</div>
+</header>
+
+<div class="main">
+  <div class="left-panel">
+
+    <div>
+      <div class="section-label">Персонаж / Character Anchor</div>
+      <div class="char-block">
+        <h3>⚓ ФІКСАЦІЯ ЗОВНІШНОСТІ</h3>
+        <div class="field-row">
+          <div><label>Стать / Age</label><input type="text" id="charAge" placeholder="e.g. man 50s"></div>
+          <div><label>Тип обличчя</label><input type="text" id="charFace" placeholder="e.g. angular jaw"></div>
+        </div>
+        <div class="field-row">
+          <div><label>Очі</label><input type="text" id="charEyes" placeholder="deep-set grey eyes"></div>
+          <div><label>Волосся</label><input type="text" id="charHair" placeholder="silver disheveled"></div>
+        </div>
+        <div class="field-row full">
+          <label>Одяг / матеріал</label>
+          <input type="text" id="charClothes" placeholder="e.g. dark wool frock coat, brass buttons">
+        </div>
+        <div class="field-row full">
+          <label>Особливі риси</label>
+          <input type="text" id="charFeatures" placeholder="e.g. prominent nose, deep forehead lines">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Сцена / Scene</div>
+      <div class="scene-controls">
+        <div class="field-row full">
+          <label>Концепція сцени (образ)</label>
+          <textarea id="sceneIdea" placeholder="Наприклад: людина яка чує тишу замість музики. Не буквально — образно."></textarea>
+        </div>
+        <div class="field-row">
+          <div><label>Настрій</label>
+            <select id="sceneMood">
+              <option value="">— вибрати —</option>
+              <option>tragic heroism</option>
+              <option>cosmic solitude</option>
+              <option>demonic energy</option>
+              <option>sacred stillness</option>
+              <option>melancholic grandeur</option>
+              <option>primal tension</option>
+              <option>transcendent joy</option>
+              <option>intimate sorrow</option>
+            </select>
+          </div>
+          <div><label>Час доби</label>
+            <select id="sceneTime">
+              <option value="">— —</option>
+              <option>golden hour</option>
+              <option>blue hour dusk</option>
+              <option>deep night</option>
+              <option>overcast noon</option>
+              <option>pre-dawn darkness</option>
+              <option>candlelight interior</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div><label>Стиль зображення</label>
+            <select id="sceneStyle">
+              <option value="">— —</option>
+              <option>oil painting texture</option>
+              <option>photorealistic cinematic</option>
+              <option>chiaroscuro dramatic</option>
+              <option>impressionist light</option>
+              <option>baroque painterly</option>
+              <option>noir black and white</option>
+              <option>watercolor wash</option>
+            </select>
+          </div>
+          <div><label>Середовище</label>
+            <select id="sceneEnv">
+              <option value="">— —</option>
+              <option>concert hall ruins</option>
+              <option>empty cathedral</option>
+              <option>Vienna period interior</option>
+              <option>forest clearing</option>
+              <option>cliff edge</option>
+              <option>underground vault</option>
+              <option>open field storm</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row full">
+          <label>Освітлення (деталь)</label>
+          <input type="text" id="sceneLighting" placeholder="e.g. single candle from left, deep shadow on right side">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Camera Movement</div>
+      <div class="camera-grid">
+        <button class="cam-btn" data-cam="Slow Dolly In">SLOW<br>DOLLY IN</button>
+        <button class="cam-btn" data-cam="Slow Dolly Out">SLOW<br>DOLLY OUT</button>
+        <button class="cam-btn" data-cam="Dolly Zoom">DOLLY<br>ZOOM</button>
+        <button class="cam-btn" data-cam="Crane Up">CRANE<br>UP</button>
+        <button class="cam-btn" data-cam="Crane Down">CRANE<br>DOWN</button>
+        <button class="cam-btn" data-cam="Orbit">ORBIT<br>360°</button>
+        <button class="cam-btn" data-cam="Rack Focus">RACK<br>FOCUS</button>
+        <button class="cam-btn" data-cam="Dutch Angle">DUTCH<br>ANGLE</button>
+        <button class="cam-btn" data-cam="Tilt Up">TILT<br>UP</button>
+        <button class="cam-btn" data-cam="Tilt Down">TILT<br>DOWN</button>
+        <button class="cam-btn" data-cam="Whip Pan">WHIP<br>PAN</button>
+        <button class="cam-btn" data-cam="Pedestal Up">PEDESTAL<br>UP</button>
+        <button class="cam-btn" data-cam="Top-Down God's Eye">TOP-DOWN<br>GOD'S EYE</button>
+        <button class="cam-btn" data-cam="FPV Dive">FPV<br>DIVE</button>
+        <button class="cam-btn" data-cam="Static Close-Up">STATIC<br>CLOSE-UP</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Параметри</div>
+      <div class="field-row">
+        <div><label>Секунд</label>
+          <select id="duration">
+            <option value="5">5 sec</option>
+            <option value="8" selected>8 sec</option>
+            <option value="10">10 sec</option>
+          </select>
+        </div>
+        <div><label>Варіантів</label>
+          <select id="variantCount">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="gen-btn" id="genBtn" onclick="generatePrompts()">Generate Prompts</button>
+
+  </div>
+
+  <div class="right-panel">
+
+    <div class="antipattern-panel">
+      <h3>⚠ GROK ANTI-PATTERN RULES — ACTIVE</h3>
+      <div class="rule-list">
+        <div class="rule-item">Ніколи "drone" — тільки first-person flight language (FPV Dive)</div>
+        <div class="rule-item">Ніколи "bare" або "naked" — Grok рендерить буквально</div>
+        <div class="rule-item">Без абстракцій без деталізації — "despair" → конкретний образ</div>
+        <div class="rule-item">Character anchor повторюється в кожному промпті дослівно</div>
+        <div class="rule-item">Camera technique завжди точною Hollywood назвою</div>
+        <div class="rule-item">Освітлення — з боку, матеріал, джерело — все конкретно</div>
+      </div>
+    </div>
+
+    <div class="char-anchor" id="charAnchorDisplay">
+      <div class="ua-label">Character Anchor — вставляється в кожен промпт</div>
+      <div id="charAnchorText"></div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="loading-bar"></div>
+      <span>GENERATING CINEMATIC PROMPTS...</span>
+    </div>
+
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">🎬</div>
+      <div>ЗАПОВНИ ПАРАМЕТРИ І НАТИСНИ GENERATE</div>
+      <div style="font-size:10px;color:#b8b0a8;margin-top:6px;">character anchor · scene concept · camera movement</div>
+    </div>
+
+    <div class="prompt-variants" id="outputArea"></div>
+
+  </div>
+</div>
+
+<script>
+  let selectedCamera = '';
+
+  document.querySelectorAll('.cam-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedCamera = btn.dataset.cam;
+    });
+  });
+
+  function updateCharAnchor() {
+    const parts = [
+      document.getElementById('charAge').value,
+      document.getElementById('charFace').value,
+      document.getElementById('charEyes').value,
+      document.getElementById('charHair').value,
+      document.getElementById('charClothes').value,
+      document.getElementById('charFeatures').value
+    ].filter(Boolean);
+    if (parts.length >= 2) {
+      document.getElementById('charAnchorText').innerHTML = `<strong>${parts.join(', ')}</strong>`;
+      document.getElementById('charAnchorDisplay').classList.add('visible');
+    } else {
+      document.getElementById('charAnchorDisplay').classList.remove('visible');
+    }
+  }
+
+  ['charAge','charFace','charEyes','charHair','charClothes','charFeatures'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateCharAnchor);
+  });
+
+  async function generatePrompts() {
+    const sceneIdea = document.getElementById('sceneIdea').value.trim();
+    if (!sceneIdea) { alert('Введи концепцію сцени!'); return; }
+
+    const charParts = [
+      document.getElementById('charAge').value,
+      document.getElementById('charFace').value,
+      document.getElementById('charEyes').value,
+      document.getElementById('charHair').value,
+      document.getElementById('charClothes').value,
+      document.getElementById('charFeatures').value
+    ].filter(Boolean);
+
+    const mood = document.getElementById('sceneMood').value;
+    const time = document.getElementById('sceneTime').value;
+    const style = document.getElementById('sceneStyle').value;
+    const env = document.getElementById('sceneEnv').value;
+    const lighting = document.getElementById('sceneLighting').value;
+    const duration = document.getElementById('duration').value;
+    const variantCount = parseInt(document.getElementById('variantCount').value);
+    const camera = selectedCamera || 'Slow Dolly In';
+
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('outputArea').innerHTML = '';
+    document.getElementById('loading').classList.add('visible');
+    document.getElementById('genBtn').disabled = true;
+
+    const systemPrompt = `You are a professional cinematographic prompt writer for Grok Video AI.
+Follow strict Hollywood cinematography language.
+
+ANTI-PATTERN RULES (MANDATORY):
+1. NEVER use "drone" — use FPV Dive only
+2. NEVER use "bare", "naked", "exposed skin"
+3. NEVER use abstract emotions alone — translate to CONCRETE VISUAL DETAIL
+4. CHARACTER ANCHOR repeated VERBATIM at start of every prompt if provided
+5. Camera technique: exact Hollywood term always
+6. Lighting: direction, source type, material interaction — always specific
+7. Every image must be FILMABLE
+
+Return JSON array of ${variantCount} objects:
+{"variant":"VARIANT A","camera":"technique","en":"full English prompt","ua":"Ukrainian translation"}
+Return ONLY the JSON array. No markdown.`;
+
+    const userPrompt = `Generate ${variantCount} Grok Video prompts.
+
+SCENE CONCEPT: ${sceneIdea}
+${charParts.length ? `CHARACTER ANCHOR (verbatim): ${charParts.join(', ')}` : 'No character — environment/atmosphere focus'}
+MOOD: ${mood || 'cinematic dramatic'}
+TIME: ${time || 'choose dramatically'}
+STYLE: ${style || 'photorealistic cinematic'}
+ENVIRONMENT: ${env || 'choose atmospherically'}
+LIGHTING: ${lighting || 'dramatic side lighting'}
+PRIMARY CAMERA: ${camera}
+DURATION: ${duration}s
+
+Variants B/C: vary camera, keep character anchor identical. Maximum specificity.`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: userPrompt }]
+        })
+      });
+      const data = await res.json();
+      const raw = data.content.map(i => i.text || '').join('');
+      const variants = JSON.parse(raw.replace(/```json|```/g, '').trim());
+      document.getElementById('loading').classList.remove('visible');
+      document.getElementById('genBtn').disabled = false;
+      renderPrompts(variants);
+    } catch (err) {
+      document.getElementById('loading').classList.remove('visible');
+      document.getElementById('genBtn').disabled = false;
+      document.getElementById('outputArea').innerHTML = `<div style="color:var(--danger);padding:20px;background:var(--danger-light);border:1px solid #e8b8b0;">Помилка: ${err.message}</div>`;
+    }
+  }
+
+  function renderPrompts(variants) {
+    const container = document.getElementById('outputArea');
+    container.innerHTML = '';
+    variants.forEach((v, i) => {
+      const card = document.createElement('div');
+      card.className = 'prompt-card visible';
+      card.innerHTML = `
+        <div class="prompt-card-header">
+          <span class="variant-label">${v.variant || `VARIANT ${String.fromCharCode(65+i)}`} — <span style="color:var(--accent2)">${v.camera}</span></span>
+          <button class="copy-btn" onclick="copyPrompt(this,${i})">COPY EN</button>
+        </div>
+        <div class="prompt-text" id="prompt-en-${i}">${esc(v.en)}</div>
+        <div class="ua-block">
+          <div class="ua-label">🇺🇦 Переклад</div>
+          <div>${esc(v.ua)}</div>
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+
+  function copyPrompt(btn, i) {
+    navigator.clipboard.writeText(document.getElementById(`prompt-en-${i}`).innerText).then(() => {
+      btn.textContent = 'COPIED ✓'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'COPY EN'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>
