@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grok Prompt Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f3ef;
+  --surface: #ffffff;
+  --surface2: #f0ede8;
+  --border: #d8d2c8;
+  --accent: #b5832a;
+  --accent-light: #f5ecd8;
+  --accent2: #5a4080;
+  --accent2-light: #ede8f5;
+  --text: #1a1714;
+  --text2: #4a4540;
+  --muted: #8a8078;
+  --danger: #c0392b;
+  --danger-light: #fdf0ee;
+  --success: #27ae60;
+  --sans: 'Inter', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --display: 'Playfair Display', serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; min-height:100vh; }
+
+header { background:var(--surface); border-bottom:2px solid var(--border); padding:16px 28px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+.logo { font-family:var(--display); font-size:20px; font-weight:700; color:var(--accent); }
+.logo span { color:var(--muted); font-size:9px; font-family:var(--mono); display:block; letter-spacing:3px; margin-top:2px; }
+.badge { font-size:10px; color:var(--danger); border:1px solid var(--danger); padding:3px 10px; font-family:var(--mono); background:var(--danger-light); }
+
+/* API KEY BAR */
+.api-bar { background:var(--surface); border-bottom:1px solid var(--border); padding:10px 28px; display:flex; align-items:center; gap:10px; }
+.api-bar label { font-size:10px; letter-spacing:2px; color:var(--muted); font-family:var(--mono); white-space:nowrap; }
+.api-bar input { flex:1; font-family:var(--mono); font-size:12px; padding:6px 10px; border:1px solid var(--border); background:var(--bg); color:var(--text); outline:none; }
+.api-bar input:focus { border-color:var(--accent); }
+.api-save { background:var(--accent); color:white; border:none; font-family:var(--mono); font-size:10px; letter-spacing:1px; padding:6px 14px; cursor:pointer; white-space:nowrap; }
+.api-save:hover { background:#a07025; }
+.api-status { font-size:10px; font-family:var(--mono); }
+.api-status.ok { color:var(--success); }
+.api-status.err { color:var(--danger); }
+
+.main { display:grid; grid-template-columns:340px 1fr; min-height:calc(100vh - 110px); }
+
+/* LEFT */
+.left { border-right:1px solid var(--border); padding:20px; display:flex; flex-direction:column; gap:18px; background:var(--surface); overflow-y:auto; }
+.sec { font-size:9px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; font-family:var(--mono); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.sec::after { content:''; flex:1; height:1px; background:var(--border); }
+.char-block { background:var(--accent2-light); border:1px solid #c8b8e8; border-left:3px solid var(--accent2); padding:12px; }
+.char-block h3 { font-family:var(--mono); font-size:9px; letter-spacing:2px; color:var(--accent2); margin-bottom:10px; }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:7px; }
+.gf { grid-column:1/-1; }
+label { font-size:9px; letter-spacing:2px; color:var(--muted); display:block; margin-bottom:3px; text-transform:uppercase; font-family:var(--mono); }
+input[type=text], select, textarea { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-family:var(--sans); font-size:12px; padding:6px 9px; outline:none; transition:border-color 0.2s; }
+input[type=text]:focus, select:focus, textarea:focus { border-color:var(--accent); }
+textarea { resize:vertical; min-height:70px; line-height:1.5; }
+.cam-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+.cam-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text2); font-family:var(--mono); font-size:9px; padding:7px 3px; cursor:pointer; text-align:center; line-height:1.3; transition:all 0.15s; }
+.cam-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-light); }
+.cam-btn.active { background:var(--accent); border-color:var(--accent); color:white; font-weight:500; }
+.gen-btn { width:100%; background:var(--accent); color:white; border:none; font-family:var(--display); font-size:16px; font-weight:600; letter-spacing:2px; padding:13px; cursor:pointer; transition:all 0.2s; box-shadow:0 2px 8px rgba(181,131,42,0.3); }
+.gen-btn:hover { background:#a07025; transform:translateY(-1px); }
+.gen-btn:disabled { background:var(--muted); cursor:not-allowed; transform:none; box-shadow:none; }
+.anc-box { background:var(--accent2-light); border:1px solid #c8b8e8; padding:8px 12px; font-size:11px; color:var(--accent2); display:none; }
+.anc-box.visible { display:block; }
+.anc-box strong { color:#3a2060; }
+
+/* RIGHT */
+.right { padding:20px 24px; display:flex; flex-direction:column; gap:14px; background:var(--bg); }
+.rules-box { background:var(--danger-light); border:1px solid #e8b8b0; border-left:3px solid var(--danger); padding:12px 14px; }
+.rules-box h3 { font-size:9px; letter-spacing:3px; color:var(--danger); margin-bottom:8px; font-family:var(--mono); }
+.rule { font-size:11px; color:#7a3530; display:flex; gap:7px; margin-bottom:4px; line-height:1.4; }
+.rule::before { content:'✗'; color:var(--danger); flex-shrink:0; font-weight:700; }
+.loading { display:none; align-items:center; gap:10px; padding:16px; font-size:11px; color:var(--muted); font-family:var(--mono); }
+.loading.visible { display:flex; }
+.loading-track { width:120px; height:2px; background:var(--border); border-radius:2px; overflow:hidden; }
+.loading-bar { height:100%; width:40%; background:var(--accent); animation:slide 1s infinite; border-radius:2px; }
+@keyframes slide { to { transform:translateX(350%); } }
+.empty { text-align:center; padding:40px; color:var(--muted); font-size:12px; font-family:var(--mono); }
+.card { background:var(--surface); border:1px solid var(--border); box-shadow:0 1px 3px rgba(0,0,0,0.04); margin-bottom:12px; animation:fadeIn 0.3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+.card-head { padding:8px 14px; background:var(--surface2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-label { font-size:10px; letter-spacing:2px; color:var(--accent); font-family:var(--mono); font-weight:500; }
+.card-cam { font-size:10px; color:var(--accent2); }
+.copy-btn { background:white; border:1px solid var(--border); color:var(--text2); font-family:var(--mono); font-size:9px; letter-spacing:1px; padding:3px 10px; cursor:pointer; transition:all 0.15s; }
+.copy-btn:hover { border-color:var(--accent); color:var(--accent); }
+.copy-btn.copied { border-color:var(--success); color:var(--success); }
+.card-en { padding:14px; font-size:13px; line-height:1.8; color:var(--text); white-space:pre-wrap; }
+.card-ua { padding:10px 14px; font-size:12px; line-height:1.6; color:#4a3870; background:var(--accent2-light); border-top:1px solid #d8ccf0; }
+.ua-lbl { font-size:9px; letter-spacing:2px; color:var(--accent2); font-family:var(--mono); margin-bottom:4px; }
+.err-box { padding:14px; background:var(--danger-light); border:1px solid #e8b8b0; color:var(--danger); font-size:12px; font-family:var(--mono); }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Grok Prompt Studio <span>CINEMATOGRAPHIC GENERATOR v2.0</span></div>
+  <div class="badge">ANTI-PATTERN PROTECTED</div>
+</header>
+
+<div class="api-bar">
+  <label for="apiKey">API KEY</label>
+  <input type="password" id="apiKey" placeholder="sk-ant-api03-...">
+  <button class="api-save" onclick="saveKey()">SAVE</button>
+  <span class="api-status" id="apiStatus"></span>
+</div>
+
+<div class="main">
+  <div class="left">
+
+    <div>
+      <div class="sec">Персонаж / Character Anchor</div>
+      <div class="char-block">
+        <h3>⚓ ФІКСАЦІЯ ЗОВНІШНОСТІ</h3>
+        <div class="g2">
+          <div><label>Стать / вік</label><input type="text" id="cA" placeholder="man 50s" oninput="updateAnc()"></div>
+          <div><label>Обличчя</label><input type="text" id="cF" placeholder="angular jaw" oninput="updateAnc()"></div>
+          <div><label>Очі</label><input type="text" id="cE" placeholder="deep-set grey eyes" oninput="updateAnc()"></div>
+          <div><label>Волосся</label><input type="text" id="cH" placeholder="silver disheveled" oninput="updateAnc()"></div>
+          <div class="gf"><label>Одяг</label><input type="text" id="cC" placeholder="dark wool frock coat, brass buttons" oninput="updateAnc()"></div>
+          <div class="gf"><label>Особливі риси</label><input type="text" id="cX" placeholder="prominent nose, deep forehead lines" oninput="updateAnc()"></div>
+        </div>
+      </div>
+      <div class="anc-box" id="ancBox">
+        <div style="font-size:9px;letter-spacing:2px;color:var(--accent2);font-family:var(--mono);margin-bottom:4px">ANCHOR — в кожен промпт</div>
+        <strong id="ancText"></strong>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec">Сцена / Scene</div>
+      <div class="gf" style="margin-bottom:8px">
+        <label>Концепція (образ)</label>
+        <textarea id="sI" placeholder="Наприклад: полум'я дихає — єдиний доказ існування у темряві"></textarea>
+      </div>
+      <div class="g2">
+        <div><label>Настрій</label>
+          <select id="sM">
+            <option value="">— вибрати —</option>
+            <option>tragic heroism</option><option>cosmic solitude</option>
+            <option>demonic energy</option><option>sacred stillness</option>
+            <option>melancholic grandeur</option><option>primal tension</option>
+            <option>transcendent joy</option><option>intimate sorrow</option>
+          </select>
+        </div>
+        <div><label>Час доби</label>
+          <select id="sT">
+            <option value="">— —</option>
+            <option>golden hour</option><option>blue hour dusk</option>
+            <option>deep night</option><option>overcast noon</option>
+            <option>pre-dawn darkness</option><option>candlelight interior</option>
+          </select>
+        </div>
+        <div><label>Стиль</label>
+          <select id="sS">
+            <option value="">— —</option>
+            <option>oil painting texture</option><option>photorealistic cinematic</option>
+            <option>chiaroscuro dramatic</option><option>impressionist light</option>
+            <option>baroque painterly</option><option>noir black and white</option>
+          </select>
+        </div>
+        <div><label>Середовище</label>
+          <select id="sE">
+            <option value="">— —</option>
+            <option>concert hall ruins</option><option>empty cathedral</option>
+            <option>Vienna period interior</option><option>forest clearing</option>
+            <option>cliff edge</option><option>open field storm</option>
+          </select>
+        </div>
+        <div class="gf"><label>Освітлення</label>
+          <input type="text" id="sL" placeholder="single candle from left, deep shadow on right">
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec">Camera Movement</div>
+      <div class="cam-grid">
+        <button class="cam-btn" data-cam="Slow Dolly In">SLOW<br>DOLLY IN</button>
+        <button class="cam-btn" data-cam="Slow Dolly Out">SLOW<br>DOLLY OUT</button>
+        <button class="cam-btn" data-cam="Dolly Zoom">DOLLY<br>ZOOM</button>
+        <button class="cam-btn" data-cam="Crane Up">CRANE<br>UP</button>
+        <button class="cam-btn" data-cam="Crane Down">CRANE<br>DOWN</button>
+        <button class="cam-btn" data-cam="Orbit 360">ORBIT<br>360°</button>
+        <button class="cam-btn" data-cam="Rack Focus">RACK<br>FOCUS</button>
+        <button class="cam-btn" data-cam="Dutch Angle">DUTCH<br>ANGLE</button>
+        <button class="cam-btn" data-cam="Tilt Up">TILT<br>UP</button>
+        <button class="cam-btn" data-cam="Tilt Down">TILT<br>DOWN</button>
+        <button class="cam-btn" data-cam="Whip Pan">WHIP<br>PAN</button>
+        <button class="cam-btn" data-cam="Pedestal Up">PEDESTAL<br>UP</button>
+        <button class="cam-btn" data-cam="Top-Down Gods Eye">TOP-DOWN<br>GOD'S EYE</button>
+        <button class="cam-btn" data-cam="FPV Dive">FPV<br>DIVE</button>
+        <button class="cam-btn" data-cam="Static Close-Up">STATIC<br>CLOSE-UP</button>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div><label>Секунд</label>
+        <select id="dur"><option value="5">5 sec</option><option value="8" selected>8 sec</option><option value="10">10 sec</option></select>
+      </div>
+      <div><label>Варіантів</label>
+        <select id="vc"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>
+      </div>
+    </div>
+
+    <button class="gen-btn" id="genBtn" onclick="generate()">Generate Prompts</button>
+
+  </div>
+
+  <div class="right">
+    <div class="rules-box">
+      <h3>⚠ GROK ANTI-PATTERN RULES — ACTIVE</h3>
+      <div class="rule">Ніколи "drone" — тільки FPV Dive</div>
+      <div class="rule">Ніколи "bare" або "naked" — Grok рендерить буквально</div>
+      <div class="rule">Абстракція → конкретний фізичний образ завжди</div>
+      <div class="rule">Character anchor повторюється дослівно в кожному промпті</div>
+      <div class="rule">Camera technique — точна Hollywood назва завжди</div>
+      <div class="rule">Освітлення — напрямок, джерело, матеріал — все конкретно</div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="loading-track"><div class="loading-bar"></div></div>
+      <span>GENERATING CINEMATIC PROMPTS...</span>
+    </div>
+
+    <div class="empty" id="empty">Заповни параметри і натисни Generate</div>
+    <div id="output"></div>
+  </div>
+</div>
+
+<script>
+let selCam = '';
+
+// Load saved key
+window.addEventListener('load', () => {
+  const k = localStorage.getItem('gps_api_key');
+  if (k) {
+    document.getElementById('apiKey').value = k;
+    document.getElementById('apiStatus').textContent = 'ключ збережено';
+    document.getElementById('apiStatus').className = 'api-status ok';
+  }
+});
+
+function saveKey() {
+  const k = document.getElementById('apiKey').value.trim();
+  if (!k.startsWith('sk-ant-')) {
+    document.getElementById('apiStatus').textContent = 'невірний формат ключа';
+    document.getElementById('apiStatus').className = 'api-status err';
+    return;
+  }
+  localStorage.setItem('gps_api_key', k);
+  document.getElementById('apiStatus').textContent = 'збережено ✓';
+  document.getElementById('apiStatus').className = 'api-status ok';
+}
+
+document.querySelectorAll('.cam-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.cam-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    selCam = b.dataset.cam;
+  });
+});
+
+function getAnc() {
+  return ['cA','cF','cE','cH','cC','cX'].map(id => document.getElementById(id).value.trim()).filter(Boolean).join(', ');
+}
+
+function updateAnc() {
+  const a = getAnc();
+  if (a.split(',').filter(Boolean).length >= 2) {
+    document.getElementById('ancText').textContent = a;
+    document.getElementById('ancBox').classList.add('visible');
+  } else {
+    document.getElementById('ancBox').classList.remove('visible');
+  }
+}
+
+function safeJSON(raw) {
+  let s = raw.replace(/```json|```/g, '').trim();
+  try { return JSON.parse(s); } catch(e) {
+    const lb = s.lastIndexOf('},');
+    if (lb > 0) s = s.slice(0, lb+1) + ']';
+    else { const ob = s.lastIndexOf('}'); if(ob>0) s = s.slice(0,ob+1)+']'; }
+    if (!s.startsWith('[')) s = '['+s;
+    try { return JSON.parse(s); } catch(e2) { throw new Error('JSON parse failed. Зменши варіанти до 1.'); }
+  }
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function generate() {
+  const apiKey = localStorage.getItem('gps_api_key') || document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Спочатку введи та збережи API ключ!'); return; }
+
+  const scene = document.getElementById('sI').value.trim();
+  if (!scene) { alert('Введи концепцію сцени!'); return; }
+
+  const anc = getAnc();
+  const mood = document.getElementById('sM').value;
+  const time = document.getElementById('sT').value;
+  const style = document.getElementById('sS').value;
+  const env = document.getElementById('sE').value;
+  const light = document.getElementById('sL').value;
+  const dur = document.getElementById('dur').value;
+  const cnt = parseInt(document.getElementById('vc').value);
+  const cam = selCam || 'Slow Dolly In';
+
+  document.getElementById('empty').style.display = 'none';
+  document.getElementById('output').innerHTML = '';
+  document.getElementById('loading').classList.add('visible');
+  document.getElementById('genBtn').disabled = true;
+
+  const sys = `You are a professional cinematographic prompt writer for Grok Video AI.
+ANTI-PATTERN RULES (MANDATORY):
+1. NEVER use "drone" — FPV Dive only
+2. NEVER use "bare" or "naked"
+3. Abstract emotions → concrete physical detail always
+4. CHARACTER ANCHOR repeated verbatim at start if provided
+5. Camera: exact Hollywood term only
+6. Lighting: direction + source + material always specific
+Return JSON array of ${cnt} objects: {"variant":"VARIANT A","camera":"name","en":"full prompt","ua":"Ukrainian translation"}
+Return ONLY the JSON array, no markdown.`;
+
+  const usr = `Generate ${cnt} Grok Video prompts.
+SCENE: ${scene}
+${anc ? 'CHARACTER ANCHOR (verbatim): '+anc : 'No character — atmosphere focus'}
+MOOD: ${mood||'cinematic dramatic'}
+TIME: ${time||'choose dramatically'}
+STYLE: ${style||'photorealistic cinematic'}
+ENV: ${env||'choose atmospherically'}
+LIGHTING: ${light||'dramatic side lighting'}
+CAMERA: ${cam}
+DURATION: ${dur}s
+Variants B/C: vary camera, keep anchor identical. Maximum specificity.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:2000, system:sys, messages:[{role:'user',content:usr}] })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content.map(i => i.text||'').join('');
+    const variants = safeJSON(raw);
+    document.getElementById('loading').classList.remove('visible');
+    document.getElementById('genBtn').disabled = false;
+    const out = document.getElementById('output');
+    variants.forEach((v, i) => {
+      const d = document.createElement('div');
+      d.className = 'card';
+      d.innerHTML = `<div class="card-head">
+        <div><span class="card-label">${esc(v.variant||'VARIANT '+String.fromCharCode(65+i))}</span> <span class="card-cam">${esc(v.camera)}</span></div>
+        <button class="copy-btn" onclick="cp(this,'pe${i}')">COPY EN</button>
+      </div>
+      <div class="card-en" id="pe${i}">${esc(v.en)}</div>
+      <div class="card-ua"><div class="ua-lbl">🇺🇦 ПЕРЕКЛАД</div>${esc(v.ua)}</div>`;
+      out.appendChild(d);
+    });
+  } catch(err) {
+    document.getElementById('loading').classList.remove('visible');
+    document.getElementById('genBtn').disabled = false;
+    document.getElementById('output').innerHTML = `<div class="err-box">Помилка: ${err.message}</div>`;
+  }
+}
+
+function cp(btn, id) {
+  navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => {
+    btn.textContent = 'COPIED ✓'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY EN'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>
